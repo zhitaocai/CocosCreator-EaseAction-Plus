@@ -10,12 +10,23 @@ export default class BoomeffectScene extends cc.Component {
 	@property(cc.Sprite)
 	iconSprite: cc.Sprite = null;
 
-	@property()
+	@property({
+		tooltip: "动画持续时间"
+	})
 	effectDuration: number = 3;
 
+	@property({
+		tooltip: "是否显示拖尾效果"
+	})
+	enableMotionSteak: boolean = false;
+
 	start() {
-		this.playBoomEffect();
-		this.drawFunction();
+		let startAnim = () => {
+			this.playBoomEffect();
+			this.drawFunction();
+		};
+		startAnim();
+		this.schedule(startAnim, this.effectDuration + 1);
 	}
 
 	playBoomEffect() {
@@ -29,6 +40,15 @@ export default class BoomeffectScene extends cc.Component {
 			animNode.width = this.iconSprite.node.width;
 			animNode.height = this.iconSprite.node.height;
 			this.iconSprite.node.addChild(animNode);
+
+			if (this.enableMotionSteak) {
+				let motionSteakNode = new cc.Node();
+				let motionSteak = motionSteakNode.addComponent(cc.MotionStreak);
+				motionSteak.texture = animSprite.spriteFrame.getTexture();
+				motionSteak.color = animNode.color;
+				animNode.addChild(motionSteakNode);
+			}
+
 			curItemCount++;
 			animNode.runAction(
 				cc.sequence(
@@ -55,6 +75,7 @@ export default class BoomeffectScene extends cc.Component {
 	}
 
 	drawFunction() {
+		this.graphics.clear();
 		cc.tween(this.graphics.node)
 			.to(
 				this.effectDuration,
@@ -64,7 +85,6 @@ export default class BoomeffectScene extends cc.Component {
 						let x = ratio;
 						let y = easeBoomEffect.easing(x);
 						this.graphics.fillRect(x * this.graphics.node.width, y * this.graphics.node.width, 5, 5);
-						cc.log(x, y);
 						return y;
 					}
 				}
